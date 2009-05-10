@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ *
+ * The MIT License
+ *
+ * Copyright (c) 2008
+ * United Nations Office at Geneva
+ * Center for Advanced Visual Analytics
+ * http://cava.unog.ch
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Label
+		toolTip="Use this control to increase/decrease text/icon size."
+		text="Scaling"
+		fontSize="9" 
+		textAlign="center"
+		/>
+		
+	<mx:HBox width="95%">
+		<mx:Button
+			id="minusScale"
+			icon="{EmbeddedIcons.zoomoutIcon}"
+			cornerRadius="5"
+			width="25"
+			height="25"
+			click="scaleSlider.value=scaleSlider.value-.1; updateScale();"
+			/>		
+		<mx:HSlider
+			tickInterval=".25"
+			width="95%"
+			id="scaleSlider"
+			value="1"
+			minimum=".5"
+			maximum="2.0"
+			snapInterval=".1"
+			liveDragging="true"
+			change="updateScale()"
+			/>
+		<mx:Button
+			id="plusScale"
+			icon="{EmbeddedIcons.zoominIcon}"
+			cornerRadius="5"
+			width="25"
+			height="25"
+			click="scaleSlider.value=scaleSlider.value+.1; updateScale();"
+			/>	
+	</mx:HBox>
+
+	<mx:Script>
+		<![CDATA[
+			import org.un.cava.birdeye.ravis.utils.events.VGraphEvent;
+			import mx.core.Container;
+			import mx.core.UIComponent;
+			import org.un.cava.birdeye.ravis.graphLayout.visual.VisualGraph;
+			import org.un.cava.birdeye.ravis.assets.icons.EmbeddedIcons;
+			
+			private var _vgraph:VisualGraph;
+
+			/**
+			 * Provides access to the registered vgraph object.
+			 * */
+			public function set vgraph(v:VisualGraph):void {
+				_vgraph = v;
+				registerListeners();
+			}
+
+
+			/**
+			 * @private
+			 * */
+			public function get vgraph():VisualGraph {
+				return _vgraph;
+			}
+			
+			/**
+			 * this updates the scale factor in all children of the vgraph
+			 * */	
+			public function updateScale():void {
+				
+				var children:Array;
+				var child:UIComponent;
+
+				if(_vgraph == null) {
+					trace("Cannot update Scale of VGraph, no valid vgraph!");
+					return;
+				}
+	
+				children = _vgraph.getChildren();
+				for each(child in children) {
+					/* we would need to make sure we don't scale the drawing
+					 * surface
+					 */
+					if(child != _vgraph.drawingSurface) {
+						child.scaleX = scaleSlider.value;
+						child.scaleY = scaleSlider.value;
+					}
+				}
+				
+				/* check if we have a layouter at all */
+				if(_vgraph.layouter != null) {
+					_vgraph.layouter.layoutChanged = true;
+				} else {
+					trace("Cannot notify null layouter of layout change due to scaling.");
+				}
+				_vgraph.draw();
+			}
+			
+			/**
+			 * refreshes the slider from the current scale value
+			 * of the first child object of VGraph
+			 * */
+			public function refreshSlider(e:VGraphEvent = null):void {
+				
+				var child:UIComponent;
+				var children:Array;
+
+				if(_vgraph == null) {
+					trace("Cannot refresh ScaleSlider of VGraph, no valid vgraph!");
+					return;
+				}	
+									
+				children = _vgraph.getChildren();
+				for each(child in children) {
+					/* we would need to make sure we don't scale the drawing
+					 * surface
+					 */
+					if(child != _vgraph.drawingSurface) {
+						scaleSlider.value = _vgraph.getChildAt(1).scaleX;
+						/* and we can abort here */
+						return;
+					}
+					trace("VGraph has no child except drawing surface, no reference for scale refresh");
+				}
+			}
+			
+			/**
+			 * register that we are complete
+			 * */
+			private function registerListeners():void {
+				_vgraph.addEventListener(VGraphEvent.VGRAPH_CHANGED,refreshSlider);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

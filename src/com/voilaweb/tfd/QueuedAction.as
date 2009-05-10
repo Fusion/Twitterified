@@ -1,0 +1,1 @@
+package com.voilaweb.tfd {	public class QueuedAction {		private var _token:String;		private var _parameter:String;		function QueuedAction(token:String, parameter:String = null) {			_token = token;			_parameter = parameter;		}				public function get token():String		{			return _token;		}		public function get parameter():String		{			return _parameter;		}	}}

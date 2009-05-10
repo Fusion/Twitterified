@@ -1,0 +1,14 @@
+Created by Auspicion.
+
+Mellow and sweet, like a good cigarette. And since it's windy and chilly, it's named after my favourite piece of ice.
+
+SoundSet:
+
+"Connected"			LogOn.aif
+"Contact Signed On" 		ContactOn.aif
+"Contact Signed Off"		ContactOff.aif
+"Message Received (New)"	Mnew.aif
+"Message Received"		Mrec.aif
+"Message Sent"			Msnd.aif
+"Disconnected"			LogOff.aif
+"Error"				error.aif

@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	creationComplete="init()"
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:tfd="com.voilaweb.tfd.*"
+	xmlns:flexlibc="flexlib.containers.*"
+	xmlns:local="*"
+	layout="absolute"
+	width="600"
+	height="800"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	backgroundAlpha="0"
+	cornerRadius="20"
+	borderStyle="none">
+<!-- showTitleBar="false" -->
+
+<!--
+CURRENT DEVELOPMENT CONSIDERATIONS
+* Most themes are unused and could be removed
+* ObjectsHandles are not used either (.SWC)
+-->
+
+	<mx:Style source="../assets/themes/kingsnare/KingnareStyle.css">
+	</mx:Style>
+
+<!--
+This style is used to create a panel with no visible titlebar, no borders...just an plain old flat area.
+-->
+    <mx:Style>
+        .notSoPanelyPanel {
+        	borderSkin: ClassReference("com.voilaweb.tfd.DrawerBorderSkin");
+        	backgroundAlpha: 1;
+        	cornerRadius: 20;
+        	headerHeight: 0;
+        	paddingLeft: 16;
+        	paddingTop: 16;
+        	paddingRight: 16;
+        	paddingBottom: 16;
+/*        	
+        	borderStyle: solid;
+        	borderThickness: 4;
+            borderThicknessLeft:   0;
+        	cornerRadius: 20;
+            headerHeight: 0;
+            dropShadowEnabled: false;
+            paddingTop: 16;
+            paddingLeft: 16;
+            paddingRight: 0;
+            verticalGap: 0;
+ */            
+        }
+    </mx:Style>
+    
+	<mx:Script>
+		<![CDATA[	
+			import mx.collections.ArrayCollection;
+			import mx.effects.easing.*;
+			import twitter.api.Twitter;
+			import twitter.api.events.TwitterEvent;
+
+			[Bindable]
+			[Embed(source="../assets/images/bluejay.png")]
+			private var appIcon:Class;
+			[Bindable]
+			[Embed(source="../assets/images/smallerbluejay.png")]
+			private var smallerAppIcon:Class;
+			[Bindable]
+			[Embed(source="../assets/images/titlebar-style.png")]
+			private var titlebarImage:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-timeline.png")]
+			private var tabIconTimeline:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-user.png")]
+			private var tabIconUser:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-public.png")]
+			private var tabIconPublic:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-following.png")]
+			private var tabIconFriends:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-followers.png")]
+			private var tabIconFollowers:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-search.png")]
+			private var tabIconSearch:Class;
+			[Bindable]
+			[Embed(source="../assets/images/tab-icon-prefs.png")]
+			private var tabIconPrefs:Class;
+			[Bindable]
+			[Embed(source="../assets/images/user-image-overlay.png")]
+			public var userImageOverlay:Class;
+			[Bindable]
+			[Embed(source="../assets/images/info-new.png")]
+			public var iconInfoNew:Class;
+			[Bindable]
+			[Embed(source="../assets/images/btn-collapse.png")]
+			public var btnCollapseImage:Class;
+			[Bindable]
+			[Embed(source="../assets/images/btn-reply.png")]
+			public var btnReplyImage:Class;
+			[Bindable]
+			[Embed(source="../assets/images/btn-dm.png")]
+			public var btnDMImage:Class;
+			[Bindable]
+			[Embed(source="../assets/images/view-by-chart.png")]
+			private var iconViewByChart:Class;
+			[Bindable]
+			[Embed(source="../assets/images/view-by-flow.png")]
+			private var iconViewByFlow:Class;
+			[Bindable]
+			[Embed(source="../assets/images/edit-add.png")]
+			public var btnEditAdd:Class;
+			[Bindable]
+			[Embed(source="../assets/images/size10-save.png")]
+			public var olbtnSave:Class;
+			[Bindable]
+			[Embed(source="../assets/images/size10-addchild.png")]
+			public var olbtnAddChild:Class;
+			[Bindable]
+			[Embed(source="../assets/images/size10-addsibling.png")]
+			public var olbtnAddSibling:Class;
+			[Bindable]
+			[Embed(source="../assets/images/size10-createnote.png")]
+			public var olbtnCreateNote:Class;
+			[Bindable]
+			[Embed(source="../assets/images/size10-delete.png")]
+			public var olbtnDelete:Class;
+			[Bindable]
+			[Embed(source="../assets/images/photobucket-logo.jpg")]
+			private var badgePhotobucket:Class;
+			[Bindable]
+			[Embed(source="../assets/images/powered-by-twitter-badge.gif")]
+			private var badgeTwitter:Class;
+			
+			[Bindable]
+			private var soundThemes:Array = new Array();			
+			[Bindable]
+			public var accountsList:ArrayCollection = new ArrayCollection();
+            [Bindable]
+            private var accountSelectorValue:Array;
+
+			private var cam:Camera;
+			
+			include "main.as";
+			public function init():void
+			{
+				main_init();
+			}
+			
+			public function initTest():void
+			{
+				//
+			}
+		]]>
+	</mx:Script>
+
+	<!-- Models, if any -->
+	
+	<!-- Effects -->
+	<mx:Parallel id="bounceEffect" duration="1100">
+		<mx:Blur blurXFrom="18" blurYFrom="18" blurXTo="0" blurYTo="0" />
+		<mx:Zoom zoomWidthFrom="0.01" zoomWidthTo="1.0" zoomHeightFrom="0.01" zoomHeightTo="1.0" easingFunction="Bounce.easeOut"/>		
+	</mx:Parallel>
+	
+	<!-- Validators -->
+	<!--
+	<mx:StringValidator id="cfg_username_validator" required="true" source="{cfg_username}" property="text" minLength="1" maxLength="63" />
+	<mx:StringValidator id="cfg_password_validator" required="true" source="{cfg_password}" property="text" minLength="1" maxLength="63"  />
+	-->
+	
+	<!-- Masks -->
+	<mx:Canvas width="64" height="64" backgroundColor="#00FF00" id="user_avatar_mask" cornerRadius="15" borderStyle="solid" />
+	<mx:DropShadowFilter color="0x00FF00" id="user_avatar_filter" />
+	
+	<!-- Overall Container -->
+	<mx:HBox id="wideContainer"
+		x="0"
+		y="0"
+		width="100%"
+		height="100%"
+		paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0" horizontalGap="0"
+		backgroundAlpha="0">
+		
+		<!-- Main Title Window -->
+		<mx:TitleWindow
+			id="mainPanel" 
+			layout="absolute" 
+			cornerRadius="15"
+			borderColor="#555555"
+			borderAlpha="1"		 
+			x="0" 
+			y="0"
+			width="100%" 
+			height="100%"
+			showCloseButton="true"
+			close="main_closeApplication(event)">
+		
+		<!-- Main Splitter -->	
+			<mx:VBox id="mainLayout" x="0" y="0" width="100%" height="100%">
+
+				<!-- Misc. Components that we will tap on demand -->
+					<mx:VBox x="0" y="0" width="0" height="0" borderStyle="none" visible="false" id="miscComponentsContainer">
+						<mx:VBox x="0" y="0" height="100%" width="100%" borderStyle="none" id="outlinerWrapper">
+							<mx:ApplicationControlBar dock="false" width="100%">
+								<mx:Button id="outliner_bt_save" icon="{olbtnSave}" label="" toolTip="Save Outlines" click="main_saveOutlines()" />
+								<mx:Button id="outliner_bt_addchild" icon="{olbtnAddChild}" label="" toolTip="Add Child" click="main_outlinerAddChild()" />
+								<mx:Button id="outliner_bt_addsibling" icon="{olbtnAddSibling}" label="" toolTip="Add Sibling" click="main_outlinerAddSibling()" />
+								<mx:Button id="outliner_bt_createnote" icon="{olbtnCreateNote}" label="" toolTip="Create Note" click="main_outlinerCreateNote()" />
+								<mx:Button id="outliner_bt_delete" icon="{olbtnDelete}" label="" toolTip="Delete" click="main_outlinerDelete()" />
+							</mx:ApplicationControlBar>
+						    <mx:Tree id="outlinerTree"
+						        height="100%" width="100%"
+						        showRoot="false"
+						        labelField="@nodeText"
+						        dragEnabled="true" 
+						        dropEnabled="true" 
+						        dragMoveEnabled="true"
+						        allowMultipleSelection="false"
+						        editable="true"
+						        itemRenderer="com.voilaweb.tfd.OutlinerRenderer"
+						        itemEditor="com.voilaweb.tfd.OutlinerEditor"
+						        itemEditBegin="main_outlineItemEditBegin(event)"
+						        itemEditBeginning="main_outlineItemEditBeginning(event)"
+						        itemEditEnd="main_outlineItemEditEnd(event)"
+						        editorXOffset="0" editorYOffset="0"
+								editorHeightOffset="0" editorWidthOffset="0"   
+								variableRowHeight="true" wordWrap="true"       									        
+						        creationComplete="main_initOutliner();"/>
+						</mx:VBox>			
+					</mx:VBox>										
+												
+				<mx:VDividedBox id="main_divider" x="0" y="0" height="100%" width="100%">
+				
+					<!-- Fold Wrapper -->
+					<mx:HBox id="fold_wrapper" width="100%" height="100%">				
+						<local:PeekPanel id="fold_panel" 
+						    width="100%" 
+						    height="100%" 
+						    backgroundAlpha="0" 
+						    dropShadowEnabled="true"
+						    cornerRadius="0"
+						    clipContent="true"
+						    foldCorner="{PeekPanel.FOLD_TOP_LEFT}"
+						    foldDestinationX="300"
+						    foldDestinationY="0">
+							<local:topPage>            						
+				
+								<!-- Timelines, Search and Preferences are contained in tab panels -->
+								<mx:TabNavigator id="navigator" width="100%" height="100%">
+								
+									<!-- Tab: Friends Timeline -->
+									<mx:VBox id="friends_timeline" label="Friends" icon="{tabIconTimeline}" width="100%" height="100%" show="main_showFriendsTimeline()">
+									</mx:VBox>
+									
+									<!-- Tab: User Timeline -->
+									<mx:VBox id="user_timeline" label="User" icon="{tabIconUser}" width="100%" height="100%" show="main_showUserTimeline()">
+									</mx:VBox>
+					
+									<!-- Tab: Public Timeline -->
+									<mx:VBox id="public_timeline" label="Public" icon="{tabIconPublic}" width="100%" height="100%" show="main_showPublicTimeline()">
+									</mx:VBox>
+					
+									<!-- Tab: Friends -->
+									<mx:VBox id="friends_screen" label="Friends" icon="{tabIconFriends}" width="100%" height="100%" show="main_showFriendsList()">
+										<mx:Form x="0" y="0" width="100%" height="100%">
+											<mx:HBox width="100%">
+												<mx:Text id="friends_screen_title" width="90%" text="Your Friends" /> 
+												<mx:Button icon="{iconViewByChart}" click="main_switchToFriendsTree()"/>
+												<mx:Button icon="{iconViewByFlow}" click="main_switchToFriendsList()"/>						
+											</mx:HBox>						
+										</mx:Form>
+										<mx:VBox id="friends_results_wrapper"  width="100%" height="100%">
+										</mx:VBox>
+									</mx:VBox>
+					
+									<!-- Tab: Followers -->
+									<mx:VBox id="followers_screen" label="Followers" icon="{tabIconFollowers}" width="100%" height="100%" show="main_showFollowersList()">
+										<mx:Form x="0" y="0" width="100%" height="100%">
+											<mx:HBox width="100%">
+												<mx:Text id="followers_screen_title" width="90%" text="Your Followers" /> 
+												<mx:Button icon="{iconViewByChart}" click="main_switchToFollowersTree()"/>
+												<mx:Button icon="{iconViewByFlow}" click="main_switchToFollowersList()"/>						
+											</mx:HBox>						
+										</mx:Form>
+	
+										<mx:VBox id="followers_results_wrapper" width="100%" height="100%">													
+										</mx:VBox>
+									</mx:VBox>
+					
+									<!-- Tab: Search -->
+									<mx:VBox id="search_screen" label="Search" icon="{tabIconSearch}" width="100%" height="100%" show="main_showSearch()">
+										<mx:Form x="0" y="0" width="100%" height="100%">
+											<mx:HBox width="100%" horizontalAlign="right">
+												<mx:FormItem label="Search Expression">
+													<tfd:CRTextInput id="search_expr" CR="main_performSearch()" />
+												</mx:FormItem>
+												<mx:Button label="Search" click="main_performSearch()"/>
+												<mx:CheckBox id="searchtrendscb" label="Trends" selected="false" />						
+											</mx:HBox>						
+										</mx:Form>
+										<mx:VBox id="search_results" width="100%" height="100%">
+										</mx:VBox>
+									</mx:VBox>
+	
+									<!-- Tab: Go-To Guy -->
+									<mx:VBox id="gotoguy_screen" label="?" width="100%" height="100%" horizontalAlign="center" show="main_showGoToGuy()">
+										<mx:Text text=" " /><mx:Text text=" " /><mx:Text text=" " />
+										<mx:Text text="Thank you for trying the Twitterified Client!" />
+										<mx:Text text="This is a beta release and we are expecting it to be far from perfect." />
+										<mx:Text text="Please report bugs so that we can improve your future experience." />
+										<mx:Text text=" " /><mx:Text text=" " /><mx:Text text=" " />
+										<mx:Text text="Big props go to Twitter for their fantastic service and APIs" />
+										<mx:Image source="{badgeTwitter}" />
+										<mx:Text text="And to PhotoBucket for their awesome API as well" />
+										<mx:Image source="{badgePhotobucket}" />
+										<mx:Text text=" " /><mx:Text text=" " /><mx:Text text=" " />
+										<mx:Text text="Note: the blue icon set was designed by http://dryicons.com/free-icons/preview/blue-velvet/" />
+									</mx:VBox>
+	
+									<!-- Tab: Preferences -->
+									<mx:Canvas id="config_screen" label="Cfg" icon="{tabIconPrefs}" width="100%" height="100%">
+										<mx:VBox x="0" y="0" width="100%" height="100%">		
+										
+											<!-- Accordion: Preferences Groups -->	
+											<mx:Accordion id="prefs_selector" x="0" y="30" width="100%" height="320" creationPolicy="all" creationComplete="main_showPreferences()">
+												<mx:Canvas label="Account Information" width="100%" height="100%">
+													<mx:Form x="0" y="0" width="100%" height="100%">
+														<mx:RadioButtonGroup id="servicedefaultgroup" change="main_serviceIsDefault(servicedefaultgroup.selectedValue)" />
+														<mx:DataGrid id="accountsGrid" width="100%" dataProvider="{accountsList}" editable="true" rowCount="3">
+															<mx:columns>
+																<mx:DataGridColumn dataField="service" editorDataField="serviceResult" rendererIsEditor="true"
+																	itemRenderer="com.voilaweb.tfd.ServiceRenderer" width="120" />
+																<mx:DataGridColumn dataField="username" editable="true" width="160" />
+																<mx:DataGridColumn dataField="password" editable="true">
+																	<mx:itemEditor>
+																		<mx:Component>
+																			<mx:TextInput editable="true" displayAsPassword="true" />
+																		</mx:Component>
+																	</mx:itemEditor>
+																	<mx:itemRenderer>
+																		<mx:Component>
+																			<mx:Label htmlText="" />
+																		</mx:Component>
+																	</mx:itemRenderer>
+																</mx:DataGridColumn>
+																<mx:DataGridColumn headerText="default" editable="false" width="50">
+																	<mx:itemRenderer>
+																		<mx:Component>
+																			<mx:RadioButton groupName="servicedefaultgroup"
+																				buttonMode="true" value="{data}" selected="{XML(data).defacc}" />
+																		</mx:Component>
+																	</mx:itemRenderer>
+																</mx:DataGridColumn>
+																<mx:DataGridColumn editable="false" width="50" itemRenderer="com.voilaweb.tfd.ServiceAction" />
+															</mx:columns>
+														</mx:DataGrid>
+														<mx:LinkButton icon="{btnEditAdd}" click="main_addRowToServiceList()"/>
+	
+														<mx:FormItem label="Secret Key">
+															<mx:TextInput id="cfg_secretkey" />
+														</mx:FormItem>
+	<!--													
+														<mx:FormItem>
+															<mx:CheckBox id="cfg_httpauth" label="Enable HTTP Auth Handling" />
+														</mx:FormItem>
+	-->													
+													</mx:Form>
+												</mx:Canvas>
+												<mx:Canvas label="Interface" width="100%" height="100%">
+													<mx:Form x="0" y="0" width="100%" height="100%">
+														<mx:FormItem label="Opacity">
+															<mx:HSlider
+																id="cfg_opacity"
+																allowTrackClick="true"
+																minimum="25"
+																maximum="100"
+																value="100"
+																labels="['25%','100%']"
+																enabled="true"
+																liveDragging="true"
+																thumbDrag="main_changeOpacity(event)"
+																showTrackHighlight="true" />
+														</mx:FormItem>
+														<mx:FormItem label="Window Height">
+															<mx:NumericStepper id="cfg_winheight" value="800" minimum="400" maximum="1200" enabled="true" stepSize="100"
+																change="main_changeWinHeight(event)" />
+														</mx:FormItem>													
+														<mx:FormItem>
+															<mx:CheckBox label="Parse Markdown" id="cfg_markdown"/>
+														</mx:FormItem>
+														<mx:FormItem>
+															<mx:CheckBox label="Minimize to System Tray" id="cfg_systray"/>
+														</mx:FormItem>
+													</mx:Form>
+												</mx:Canvas>
+												<mx:Canvas label="Sound" width="100%" height="100%">
+													<mx:Form x="0" y="0" width="100%" height="100%">
+														<mx:FormItem>
+															<mx:CheckBox label="Play Sounds" id="cfg_sounds"/>
+														</mx:FormItem>
+														<mx:FormItem label="Theme">
+															<mx:ComboBox
+																id="cfg_soundtheme"
+																dataProvider="{soundThemes}"
+																change="main_changeSoundTheme(event)">
+															</mx:ComboBox>
+															<mx:Button label="test" click="main_playSound('On')"/>
+														</mx:FormItem>
+													</mx:Form>
+												</mx:Canvas>
+												<mx:Canvas label="Performance" width="100%" height="100%">
+													<mx:Form x="0" y="0" width="100%" height="100%">
+														<mx:FormItem label="Refresh Every">
+															<mx:NumericStepper id="cfg_refresh" value="5" minimum="1" maximum="60" enabled="true" stepSize="1"/>
+														</mx:FormItem>
+														<mx:FormItem>
+															<mx:CheckBox label="Track Replies (Slower)" id="cfg_conversations"/>
+														</mx:FormItem>
+													</mx:Form>
+												</mx:Canvas>
+												<mx:Canvas label="Advanced" width="100%" height="100%">
+													<mx:Form x="0" y="0" width="100%" height="100%">
+														<mx:FormItem label="Server">
+															<mx:TextInput id="cfg_server" />
+														</mx:FormItem>
+														<mx:FormItem>																																						
+															<mx:CheckBox label="Debug" id="cfg_debugging" />
+														</mx:FormItem>
+													</mx:Form>
+												</mx:Canvas>
+											</mx:Accordion>
+											
+											<!-- "Save" Button -->
+											<mx:HBox width="100%" horizontalAlign="right">
+												<mx:Button label="Save Preferences" click="main_savePreferences()"/>
+											</mx:HBox>
+										</mx:VBox>
+									</mx:Canvas>
+									
+								</mx:TabNavigator>		
+	
+							</local:topPage>	
+							<local:hiddenPage>
+								<mx:VBox horizontalAlign="left" width="100%" height="100%">
+									<mx:VBox id="user_panel" horizontalAlign="center" verticalAlign="middle" width="150" height="100%">
+									</mx:VBox>	
+								</mx:VBox>					
+							</local:hiddenPage>	
+						</local:PeekPanel>
+					</mx:HBox>
+					
+					<!-- Bottom half of our splitter -->
+					<mx:Canvas width="100%" height="100" id="bottom">
+						<mx:VBox x="0" y="0" width="100%" height="100%">
+							
+							<!-- Tweet Modes Buttons -->
+							<mx:HBox width="100%">
+								<mx:ToggleButtonBar id='tweet_modes_bar' itemClick="main_switchMode(event)">
+									<mx:dataProvider>
+										<mx:Array>
+											<mx:String>tweet</mx:String>
+											<mx:String>image</mx:String>
+											<mx:String>video</mx:String>
+										</mx:Array>
+									</mx:dataProvider>
+								</mx:ToggleButtonBar>
+								
+								<mx:ToggleButtonBar id='tweet_image_modes_bar' itemClick="main_switchImageMode(event)" visible="false">
+									<mx:dataProvider>
+										<mx:Array>
+											<mx:String>link</mx:String>
+											<mx:String>webcam</mx:String>
+										</mx:Array>
+									</mx:dataProvider>
+								</mx:ToggleButtonBar>
+							</mx:HBox>
+						
+							<!-- Tweet Modes Panels -->
+							<mx:ViewStack id="tweetmodes" width="100%" height="0">
+								<mx:Canvas id="image_tweet_mode" width="100%" height="100%">
+									<mx:Form x="0" y="0" width="100%" height="100%">
+										<mx:FormItem label="Image URL" width="100%">
+											<mx:TextInput id="tweet_imageurl" width="75%" />
+										</mx:FormItem>
+									</mx:Form>							
+								</mx:Canvas>
+								<mx:Canvas id="image_webcam_tweet_mode" width="100%" height="100%" show="main_imgWebcamPreviewMode()">
+									<mx:Form x="0" y="0" width="100%" height="100%">
+										<mx:VBox>
+											<mx:Tile id="camerabox" />
+											<mx:HBox width="100%" horizontalAlign="center">
+												<mx:ComboBox id="cameraslist" dataProvider="{Camera.names}" change="main_selectCamera()" />
+												<mx:Button id="iwacbutton" label="Snap!" click="main_createSnapshot()" />
+											</mx:HBox>			
+										</mx:VBox>
+									</mx:Form>							
+								</mx:Canvas>
+								<mx:Canvas id="video_tweet_mode" width="100%" height="100%">
+									<mx:Form x="0" y="0" width="100%" height="100%">
+										<mx:FormItem label="Video Embed Code" width="100%">
+											<mx:TextInput id="tweet_videoembedcode" width="75%" />
+										</mx:FormItem>
+									</mx:Form>							
+								</mx:Canvas>
+							</mx:ViewStack>
+							
+							<mx:TextArea id="statusArea" width="100%" height="100%" focusIn="main_statusButtonFocused()" change="main_inputInStatusArea()" />	
+						</mx:VBox>
+					</mx:Canvas>
+					
+				</mx:VDividedBox>
+				
+				<!-- Status -->
+				<mx:HBox id="statusBox" width="100%" height="24">
+					<mx:HBox id="messageBox" width="90%" height="100%">
+						<mx:Text id="statusText" text="Ready."/>
+						<mx:LinkButton id="statusTextIcon" width="16" height="16" label="" />
+					</mx:HBox>
+					<local:Spinner id="spinner"/>
+					<mx:ComboBox id="accountselectorcb" dataProvider="{accountSelectorValue}" />
+					<mx:Button id="send_status" label="Send" click="main_sendStatus()" />
+					<mx:Spacer width="8" />		
+				</mx:HBox>
+			</mx:VBox>		
+		
+		</mx:TitleWindow>
+	</mx:HBox>
+	
+	
+</mx:Application>

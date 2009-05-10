@@ -1,0 +1,13 @@
+Created by Zeethrogise with passion.
+
+The sounds you never thought traveled through a Fiber Optic cable.
+
+________________
+http://www.adiumx.com
+
+SoundSet:
+"Contact Signed On" 		LogOn.aif
+"Contact Signed Off"		LogOff.aif
+"Message Received (New)"	NewMsg.aif
+"Message Received"		Receive.aif
+"Message Sent"			Send.aif

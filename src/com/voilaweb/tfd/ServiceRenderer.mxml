@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center">
+   <mx:Script>
+        <![CDATA[
+            public var serviceResult:String = "";
+            
+            [Bindable]
+            private var dpValue:Array = [ 
+                { label:"Twitter",        data:"1" },
+                { label:"Identi.ca",      data:"2" },
+                { label:"Twit Army",      data:"3" },
+                { label:"Linux Infusion", data:"4" },
+                { label:"Present.ly",     data:"5" } ];
+            
+        
+            override public function set data(value:Object):void 
+            {
+                super.data = value;
+                if (value != null) 
+                {
+                    var currentValue:String = value.service;
+                    var len:int = dpValue.length;
+                    for (var i:int = 0; i < len; i++) 
+                    {
+                        if (dpValue[i].data == currentValue || dpValue[i].label == currentValue) 
+                        {
+                            servicecb.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            } 
+            
+            public function onChange():void 
+            {
+                var index:int = servicecb.selectedIndex;
+                serviceResult = dpValue[index].data;
+            }          
+        ]]>
+    </mx:Script>
+     <mx:ComboBox id="servicecb" dataProvider="{dpValue}" change="onChange()"/>
+</mx:VBox>

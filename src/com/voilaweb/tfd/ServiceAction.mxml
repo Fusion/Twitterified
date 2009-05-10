@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+		]]>
+	</mx:Script>
+	<mx:LinkButton icon="@Embed(source='../assets/images/edit-remove.png')" click="Application.application.main_removeRowFromServiceList(event, data)" />	
+</mx:HBox>

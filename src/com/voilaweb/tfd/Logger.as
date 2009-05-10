@@ -1,0 +1,1 @@
+package com.voilaweb.tfd {	public class Logger {		function Logger() {		}				public static function info(text:String):void		{			trace("[TFD] " + text);		}	}}

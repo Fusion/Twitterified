@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" implements="mx.core.IFactory">
+   <mx:Script>
+        <![CDATA[
+        	public var nodeText:String;
+        	
+        	public function newInstance():*
+        	{
+        		return new OutlinerNoteEditor();
+        	}        	
+        ]]>
+    </mx:Script>
+
+    <!-- Display label and let the user edit it.-->
+	<mx:VBox width="100%" height="100%" id="outlinerTextAreaBox">
+		<mx:Label text="Note" fontWeight="bold" />
+		<mx:TextArea id="outlinerTextEditField"
+			height="100%" width="100%"
+	        text="{XML(data).@nodeText}"
+	        change="nodeText=outlinerTextEditField.text;"
+	        creationComplete="outlinerTextEditField.setFocus();"/>        
+	</mx:VBox>
+</mx:VBox>
